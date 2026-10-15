@@ -166,8 +166,27 @@ def test_startup_registers_intents_and_marks_learned(env):
 def test_voice_command_starts_flow_and_speaks(env):
     env.bus.emit(Message(f"{SKILL_ID}:kantoor_check_in.intent", {"utterance": "terug op kantoor"}))
     wait_for(lambda: env.spoken)
-    assert env.spoken[-1] == "De actie 'Kantoor: check in' is gestart."
+    assert env.spoken[-1] == "Gedaan."  # korte standaardmelding
     assert env.started.read_text().strip() == "f1-kantoor-in"
+
+
+def test_custom_message_from_webpage_applies_immediately_and_can_be_silent(env):
+    wait_for(lambda: len(env.service.registered) == 2)
+    status, data = http(env.port, "/api/messages", "PUT", {"messages": {"started": "Komt eraan, {flow}"}})
+    assert status == 200
+    env.bus.emit(Message(f"{SKILL_ID}:kantoor_check_in.intent", {"utterance": "terug op kantoor"}))
+    wait_for(lambda: env.spoken)
+    assert env.spoken[-1] == "Komt eraan, Kantoor: check in"
+
+    env.spoken.clear()
+    http(env.port, "/api/messages", "PUT", {"messages": {"started": ""}})
+    env.bus.emit(Message(f"{SKILL_ID}:kantoor_check_in.intent", {"utterance": "terug op kantoor"}))
+    wait_for(lambda: len(env.started.read_text().splitlines()) >= 2)
+    time.sleep(0.3)
+    assert env.spoken == []  # leeg ingesteld: niets gezegd, flow is wel gestart
+
+    http(env.port, "/api/messages/speak", "POST", {"key": "started", "text": "Proef"})
+    wait_for(lambda: env.spoken == ["Proef"])
 
 
 def test_learn_replaces_old_sentences_without_duplicates(env):
@@ -202,7 +221,7 @@ def test_learn_replaces_old_sentences_without_duplicates(env):
     assert env.spoken == []
     env.bus.emit(Message(f"{SKILL_ID}:koffie_zetten.intent", {"utterance": "zet koffie"}))
     wait_for(lambda: env.spoken)
-    assert env.spoken[-1] == "De actie 'Koffie zetten' is gestart."
+    assert env.spoken[-1] == "Gedaan."
 
 
 def test_learn_twice_is_stable(env):

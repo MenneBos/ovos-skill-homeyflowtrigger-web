@@ -12,7 +12,7 @@ from .homeyflow.flowrunner import run_utterance
 from .homeyflow.homey import HomeyClient
 from .homeyflow.intents import SyncResult, sync_intent_files
 from .homeyflow.mappings import MappingError, MappingStore, training_fingerprint
-from .homeyflow.messages import say
+from .homeyflow.messages import MessageStore
 from .homeyflow.trainer import TrainingState
 from .homeyflow.web import WebServer, create_app
 
@@ -42,6 +42,9 @@ class _Bridge(SkillBridge):
     def padatious_test(self, utterance):
         return self.skill.padatious_test(utterance)
 
+    def speak(self, text):
+        self.skill.speak(text)
+
     def restart(self):
         self.skill.schedule_restart()
 
@@ -58,6 +61,7 @@ class HomeyFlowBaseSkill(OVOSSkill):
         self.intent_dir = Path(self.root_dir) / "locale" / self.language / "intents"
         self.store = MappingStore(self.hf_settings.mappings_path, self.hf_settings.backups_dir)
         self.homey = HomeyClient(self.hf_settings)
+        self.messages = MessageStore(self.hf_settings.messages_path, self.language)
         self.training_state = TrainingState(self.hf_settings.state_path)
         self._registered = set()  # intent-bestanden die nu bij de intent-service staan
         self._intent_lock = threading.Lock()
@@ -70,7 +74,7 @@ class HomeyFlowBaseSkill(OVOSSkill):
     def _start_web(self):
         try:
             app = create_app(self.hf_settings, bridge=_Bridge(self), homey=self.homey,
-                             store=self.store, intent_dir=self.intent_dir)
+                             store=self.store, messages=self.messages, intent_dir=self.intent_dir)
             self._web = WebServer(app, self.hf_settings.web_host, self.hf_settings.web_port)
             self._web.start()
             self.log.info(f"Beheerwebserver gestart op poort {self.hf_settings.web_port}")
@@ -95,6 +99,14 @@ class HomeyFlowBaseSkill(OVOSSkill):
             self._web.stop()
 
     # ---------------------------------------------------------------- spraak
+    def _say(self, key, **values):
+        """Spreek een melding uit; de tekst (en of er iets gezegd wordt) komt uit de webpagina-instellingen."""
+        text = self.messages.render(key, **values)
+        if text:
+            self.speak(text)
+        else:
+            self.log.info(f"Melding '{key}' is leeg ingesteld: niets uitgesproken.")
+
     def handle_start_flow(self, message):
         utterance = (message.data.get("utterance") or "").strip().lower()
         if not utterance and message.data.get("utterances"):
@@ -105,22 +117,22 @@ class HomeyFlowBaseSkill(OVOSSkill):
             result = run_utterance(utterance, self.store, self.homey, run=True)
         except MappingError as exc:
             self.log.error(f"flow_mappings.json kon niet geladen worden: {exc}")
-            self.speak(say(self.language, "settings_error"))
+            self._say("settings_error")
             return
 
         status = result["status"]
         if status == "no_match":
             self.log.error(f"Geen overeenkomende zin voor: '{utterance}'")
-            self.speak(say(self.language, "no_match", utterance=utterance))
+            self._say("no_match", utterance=utterance)
         elif status == "no_id":
             self.log.error(f"Geen id gevonden voor flow '{result['flow']}'")
-            self.speak(say(self.language, "no_id", flow=result["title"]))
+            self._say("no_id", flow=result["title"])
         elif status == "error":
             self.log.error(f"Flow '{result['flow']}' starten mislukt: {result.get('error')}")
-            self.speak(say(self.language, "error", flow=result["title"]))
+            self._say("error", flow=result["title"])
         else:
             self.log.info(f"Flow '{result['flow']}' gestart (score {result['score']}).")
-            self.speak(say(self.language, "started", flow=result["title"]))
+            self._say("started", flow=result["title"])
 
     # ------------------------------------------------- leren via de messagebus
     def _full_name(self, name):

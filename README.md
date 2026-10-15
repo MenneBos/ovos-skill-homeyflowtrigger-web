@@ -20,6 +20,7 @@ gestart.
     (toevoegen, wijzigen, verwijderen; wijzigingen worden direct opgeslagen).
   - **+** bovenaan de lijst: flows uit Homey zoeken op zoekterm (via `get_flow.js`) en er meerdere tegelijk toevoegen.
   - **Intents leren:** met bevestiging; de skill registreert de zinnen opnieuw bij de intent-service.
+  - **Meldingen:** de gesproken antwoorden aanpassen en beluisteren (zie [Meldingen](#meldingen)).
   - **Testen:** zin intypen en zien welke flow gekozen wordt (zowel door Padatious als door de skill).
     Een flow écht starten kan pas na een tweede bevestiging.
   - Donker en licht thema, werkt ook op een telefoon.
@@ -65,6 +66,20 @@ Lukt dat bij jouw OVOS-versie niet, zet dan `"training": {"mode": "restart"}` in
 (of `HOMEYFLOW_TRAINING_MODE=restart`). De skill stopt dan zichzelf en Docker start de container
 opnieuw (`restart: unless-stopped`); in de systemd-variant wordt `ovos.service` herstart.
 Er is **geen Docker-socket** nodig.
+
+## Meldingen
+
+Na het starten van een flow zegt de assistent standaard alleen een korte bevestiging (**"Gedaan."**).
+Op de pagina **Meldingen** pas je dit en de andere gesproken antwoorden aan:
+
+- *Flow gestart*, *Zin niet herkend*, *Flow zonder id*, *Starten mislukt* en *Instellingen onleesbaar*.
+- Invulvelden: `{flow}` (naam van de flow) en `{utterance}` (wat je zei); per melding staat erbij welke kunnen.
+- Laat *Flow gestart* leeg om na het starten niets te zeggen.
+- **Afspelen** laat de assistent de tekst direct uitspreken (met voorbeeldwaarden), nog voor je opslaat.
+- Wijzigingen gelden direct na opslaan; leren of herstarten is niet nodig.
+
+De teksten staan in `spoken_messages.json` naast `flow_mappings.json` (alleen wat je aanpast). Verwijder het
+bestand om alles terug te zetten naar de standaardteksten.
 
 ## Installatie (Docker)
 

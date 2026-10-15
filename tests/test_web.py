@@ -151,3 +151,36 @@ def test_security_headers_and_no_token_leak(client, settings):
     assert "frame-ancestors 'none'" in response.headers["Content-Security-Policy"]
     for url in ["/api/status", "/api/flows", "/", "/flows"]:
         assert settings.homey_token.encode() not in client.get(url).data
+
+
+def test_messages_api_roundtrip_and_speak(client, bridge, settings):
+    data = client.get("/api/messages").get_json()
+    started = next(m for m in data["messages"] if m["key"] == "started")
+    assert started["value"] == "Gedaan." and started["custom"] is False
+
+    put = client.put("/api/messages", json={"messages": {"started": "Top, {flow} draait"}}, headers=JSON_HEADERS)
+    assert put.status_code == 200
+    started = next(m for m in put.get_json()["messages"] if m["key"] == "started")
+    assert started["value"] == "Top, {flow} draait" and started["custom"] is True
+    assert "Top" in settings.messages_path.read_text(encoding="utf-8")
+
+    bad = client.put("/api/messages", json={"messages": {"started": "Hoi {nope}"}}, headers=JSON_HEADERS)
+    assert bad.status_code == 400 and "invulveld" in bad.get_json()["error"]
+    assert next(m for m in client.get("/api/messages").get_json()["messages"] if m["key"] == "started")["value"] == "Top, {flow} draait"
+
+    spoken = client.post("/api/messages/speak", json={"key": "started", "text": "Hoi {flow}"}, headers=JSON_HEADERS)
+    assert spoken.status_code == 200 and bridge.spoken == ["Hoi Woonkamer licht"]
+    assert client.post("/api/messages/speak", json={"key": "started", "text": ""}, headers=JSON_HEADERS).status_code == 400
+
+    reset = client.put("/api/messages", json={"messages": {"started": None}}, headers=JSON_HEADERS)
+    assert next(m for m in reset.get_json()["messages"] if m["key"] == "started")["custom"] is False
+
+
+def test_messages_page_and_csrf_rules(client):
+    assert client.get("/meldingen").status_code == 200
+    assert b"Meldingen" in client.get("/").data  # menu-item
+    # zelfde bescherming als de andere schrijf-routes
+    assert client.put("/api/messages", json={"messages": {"started": "x"}},
+                      headers={"Origin": "http://evil.example"}).status_code in (403, 415)
+    assert client.put("/api/messages", data='{"messages": {"started": "x"}}',
+                      headers={"Content-Type": "text/plain"}).status_code == 415

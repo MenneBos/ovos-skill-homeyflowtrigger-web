@@ -26,6 +26,10 @@ class SkillBridge:
         """{'available': bool, 'intent': naam|None, 'confidence': float|None}"""
         return {"available": False, "intent": None, "confidence": None}
 
+    def speak(self, text: str) -> None:
+        """Laat de assistent deze tekst uitspreken (om een melding te beluisteren)."""
+        raise BridgeError("Uitspreken wordt in deze omgeving niet ondersteund.")
+
     def restart(self) -> None:
         """Herstart de skill kort na dit antwoord (zodat het HTTP-antwoord nog aankomt)."""
         raise BridgeError("Herstarten wordt niet ondersteund.")

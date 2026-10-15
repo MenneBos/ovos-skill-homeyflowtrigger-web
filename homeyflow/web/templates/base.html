@@ -24,6 +24,10 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
           <span>Flows</span>
         </a>
+        <a href="{{ url_for('messages_page') }}" class="nav-item{% if page == 'messages' %} active{% endif %}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/></svg>
+          <span>Meldingen</span>
+        </a>
       </nav>
       <div class="sidebar-foot">
         <button type="button" class="btn btn-ghost" id="theme-toggle">Thema</button>

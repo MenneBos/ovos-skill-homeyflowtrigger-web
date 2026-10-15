@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Meldingen{% endblock %}
+{% block heading %}Meldingen{% endblock %}
+{% block content %}
+<section class="card">
+  <header class="card-head">
+    <div>
+      <h2>Wat zegt de assistent?</h2>
+      <p class="muted small">Pas hier de gesproken meldingen aan. Wijzigingen gelden direct na opslaan; leren of herstarten is niet nodig.</p>
+    </div>
+    <div class="row">
+      <button type="button" class="btn" id="msg-reset-all">Alles standaard</button>
+      <button type="button" class="btn btn-primary" id="msg-save" disabled>Opslaan</button>
+    </div>
+  </header>
+  <div class="card-body">
+    <ul class="msg-list" id="msg-list"><li class="muted">Laden…</li></ul>
+  </div>
+</section>
+
+<dialog id="dlg-reset" class="dialog">
+  <div class="dlg-inner">
+    <h2>Alles standaard?</h2>
+    <p>Alle meldingen worden teruggezet naar de standaardtekst. Je eigen teksten gaan verloren.</p>
+    <div class="dlg-foot">
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="reset-cancel">Annuleren</button>
+      <button type="button" class="btn btn-primary" id="reset-ok">Terugzetten</button>
+    </div>
+  </div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/messages.js') }}"></script>{% endblock %}

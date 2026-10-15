@@ -14,6 +14,7 @@ from ..config import Settings
 from ..flowrunner import run_utterance
 from ..homey import HomeyClient, HomeyError
 from ..log import get_logger
+from ..messages import EXAMPLES, MessageStore, clean_message, render_text
 from ..mappings import (MappingError, MappingStore, NotFoundError, ValidationError,
                         flow_title, intent_stems, training_fingerprint)
 from ..trainer import Trainer
@@ -46,10 +47,12 @@ def _host_allowed(host_header: str, extra_hosts) -> bool:
 
 def create_app(settings: Settings, bridge: Optional[SkillBridge] = None,
                homey: Optional[HomeyClient] = None, store: Optional[MappingStore] = None,
-               trainer: Optional[Trainer] = None, intent_dir: Optional[Path] = None) -> Flask:
+               trainer: Optional[Trainer] = None, intent_dir: Optional[Path] = None,
+               messages: Optional[MessageStore] = None) -> Flask:
     bridge = bridge or SkillBridge()
     homey = homey or HomeyClient(settings)
     store = store or MappingStore(settings.mappings_path, settings.backups_dir)
+    messages = messages or MessageStore(settings.messages_path, settings.language)
     if trainer is None:
         trainer = Trainer(settings, store, bridge, intent_dir or settings.config_dir / "intents")
 
@@ -140,6 +143,10 @@ def create_app(settings: Settings, bridge: Optional[SkillBridge] = None,
     @app.get("/flows")
     def flows_page():
         return render_template("flows.html", page="flows", version=__version__)
+
+    @app.get("/meldingen")
+    def messages_page():
+        return render_template("messages.html", page="messages", version=__version__)
 
     @app.get("/healthz")
     def healthz():
@@ -237,6 +244,29 @@ def create_app(settings: Settings, bridge: Optional[SkillBridge] = None,
                 padatious["flow"] = stems.get(stem)
             result["padatious"] = padatious
         return jsonify(result)
+
+    @app.get("/api/messages")
+    def api_messages():
+        return jsonify(language=settings.language, messages=messages.overview(), examples=EXAMPLES)
+
+    @app.put("/api/messages")
+    def api_messages_update():
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict) or not isinstance(body.get("messages"), dict):
+            raise ValidationError("Verwacht: {\"messages\": {sleutel: tekst of null}}")
+        return jsonify(language=settings.language, messages=messages.update(body["messages"]), examples=EXAMPLES)
+
+    @app.post("/api/messages/speak")
+    def api_messages_speak():
+        """Laat een (nog niet opgeslagen) tekst uitspreken, met voorbeeldwaarden voor de invulvelden."""
+        body = request.get_json(silent=True)
+        if not isinstance(body, dict) or "key" not in body or "text" not in body:
+            raise ValidationError("Verwacht: {\"key\": ..., \"text\": ...}")
+        text = render_text(clean_message(str(body["key"]), body["text"]), **EXAMPLES).strip()
+        if not text:
+            raise ValidationError("Deze melding is leeg: er is niets om uit te spreken.")
+        bridge.speak(text)
+        return jsonify(ok=True, spoken=text)
 
     @app.post("/api/restart")
     def api_restart():

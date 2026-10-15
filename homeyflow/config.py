@@ -61,6 +61,10 @@ class Settings:
         return self.config_dir / "flow_mappings_backups"
 
     @property
+    def messages_path(self) -> Path:
+        return self.config_dir / "spoken_messages.json"
+
+    @property
     def state_path(self) -> Path:
         return self.config_dir / "training_state.json"
 

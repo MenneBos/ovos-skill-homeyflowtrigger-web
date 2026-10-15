@@ -21,6 +21,7 @@ class FakeBridge(SkillBridge):
         self.fail = fail
         self.registered = 0
         self.restarted = False
+        self.spoken = []
         self.padatious_available = True
 
     def skill_status(self) -> dict:
@@ -48,6 +49,9 @@ class FakeBridge(SkillBridge):
         stem = intent_stems(mappings)[match.key]
         return {"available": True, "intent": f"fake-skill:{stem}.intent",
                 "confidence": round(match.score * 0.97, 3)}
+
+    def speak(self, text: str) -> None:
+        self.spoken.append(text)
 
     def restart(self) -> None:
         self.restarted = True
