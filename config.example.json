@@ -1,0 +1,16 @@
+{
+  "homey": {
+    "address": "http://192.168.1.50",
+    "token": "VUL-HIER-JE-HOMEY-API-KEY-IN"
+  },
+  "web": {
+    "host": "0.0.0.0",
+    "port": 8200,
+    "allowed_hosts": []
+  },
+  "language": "nl-nl",
+  "training": {
+    "mode": "live",
+    "timeout": 120
+  }
+}

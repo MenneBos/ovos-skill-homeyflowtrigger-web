@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block heading %}Dashboard{% endblock %}
+{% block content %}
+<section class="card hero">
+  <div class="logo-tile"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="StemCom Luistert" width="256" height="128"></div>
+  <div class="hero-text">
+    <h2>Spraakopdrachten voor je Homey-flows</h2>
+    <p>Koppel zinnen aan Homey-flows. Zegt iemand zo'n zin tegen OVOS, dan start de skill de bijbehorende flow.
+       Alles werkt lokaal: er is geen cloud en geen MQTT-broker meer nodig.</p>
+    <div class="row">
+      <a class="btn btn-primary" href="{{ url_for('flows_page') }}">Flows beheren</a>
+    </div>
+  </div>
+</section>
+
+<section class="stats" id="stats">
+  <article class="card stat"><span class="stat-label">Flows</span><strong class="stat-value" id="st-flows">–</strong><span class="stat-note" id="st-flows-note"></span></article>
+  <article class="card stat"><span class="stat-label">Zinnen</span><strong class="stat-value" id="st-sentences">–</strong><span class="stat-note">intents voor spraakherkenning</span></article>
+  <article class="card stat"><span class="stat-label">Geleerd</span><strong class="stat-value" id="st-learned">–</strong><span class="stat-note" id="st-learned-note"></span></article>
+  <article class="card stat"><span class="stat-label">Homey</span><strong class="stat-value" id="st-homey">–</strong><span class="stat-note" id="st-homey-note"></span></article>
+</section>
+
+<section class="card">
+  <header class="card-head"><h2>Skill</h2></header>
+  <div class="card-body">
+    <dl class="facts" id="facts"></dl>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>{% endblock %}

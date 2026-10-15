@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}Fout{% endblock %}
+{% block heading %}Fout{% endblock %}
+{% block content %}
+<section class="card"><div class="card-body"><p>{{ message }}</p>
+<p><a class="btn btn-primary" href="{{ url_for('dashboard') }}">Naar het dashboard</a></p></div></section>
+{% endblock %}

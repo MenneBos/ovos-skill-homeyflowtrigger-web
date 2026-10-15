@@ -1,0 +1,21 @@
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+node_modules/
+.pytest_cache/
+
+# nooit committen: geheimen en lokale gegevens
+config/
+config.json
+!config.example.json
+.env
+*.token
+flow_mappings_backups/
+training_state.json
+
+# door de skill gegenereerde intents (komen uit flow_mappings.json)
+locale/*/intents/*.intent

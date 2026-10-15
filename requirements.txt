@@ -1,0 +1,4 @@
+ovos-utils>=0.0.38
+ovos-workshop>=0.0.15
+flask>=3.0
+waitress>=3.0

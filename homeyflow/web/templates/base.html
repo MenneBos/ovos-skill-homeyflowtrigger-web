@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Dashboard{% endblock %} · HomeyFlowTrigger</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <a href="{{ url_for('dashboard') }}" class="brand-name">HomeyFlowTrigger</a>
+        <span class="brand-sub">Beheerpaneel</span>
+      </div>
+      <nav class="nav" aria-label="Hoofdmenu">
+        <a href="{{ url_for('dashboard') }}" class="nav-item{% if page == 'dashboard' %} active{% endif %}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>
+          <span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('flows_page') }}" class="nav-item{% if page == 'flows' %} active{% endif %}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>
+          <span>Flows</span>
+        </a>
+      </nav>
+      <div class="sidebar-foot">
+        <button type="button" class="btn btn-ghost" id="theme-toggle">Thema</button>
+        <span class="version">v{{ version }}</span>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <h1>{% block heading %}Dashboard{% endblock %}</h1>
+        <span class="pill" id="homey-pill" data-state="unknown"><i></i><span>Status laden…</span></span>
+      </header>
+      <main class="content">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+  </div>
+  <div class="toasts" id="toasts" aria-live="polite"></div>
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

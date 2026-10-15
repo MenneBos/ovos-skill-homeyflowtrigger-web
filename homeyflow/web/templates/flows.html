@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Flows{% endblock %}
+{% block heading %}Flows{% endblock %}
+{% block content %}
+<section class="card learnbar" id="learnbar">
+  <div class="learn-state" id="learn-state"><span class="dot" id="learn-dot"></span><span id="learn-text">Status laden…</span></div>
+  <div class="row">
+    <button type="button" class="btn" id="btn-test">Testen</button>
+    <button type="button" class="btn btn-primary" id="btn-learn">Intents leren</button>
+  </div>
+</section>
+
+<div class="split">
+  <section class="card list-panel">
+    <header class="card-head">
+      <h2>Flows <span class="count" id="flow-count">0</span></h2>
+      <button type="button" class="btn btn-icon btn-primary" id="btn-add" title="Flow toevoegen vanuit Homey" aria-label="Flow toevoegen vanuit Homey">+</button>
+    </header>
+    <div class="list-filter"><input type="search" id="flow-filter" placeholder="Filter…" aria-label="Filter flows"></div>
+    <ul class="flow-list" id="flow-list"></ul>
+  </section>
+
+  <section class="card detail-panel" id="detail">
+    <div class="empty" id="detail-empty">
+      <p>Kies links een flow, of voeg er een toe met <strong>+</strong>.</p>
+    </div>
+    <div id="detail-body" hidden>
+      <header class="card-head">
+        <div>
+          <h2 id="d-title"></h2>
+          <code class="muted small" id="d-id"></code>
+        </div>
+        <button type="button" class="btn btn-danger" id="btn-delete">Flow verwijderen</button>
+      </header>
+      <div class="card-body">
+        <h3>Zinnen</h3>
+        <p class="muted small">Elke zin is een manier om deze flow te starten. Wijzigingen worden direct opgeslagen; klik daarna op <em>Intents leren</em>.</p>
+        <ul class="sentence-list" id="sentence-list"></ul>
+        <form class="sentence-add" id="sentence-form" autocomplete="off">
+          <input type="text" id="sentence-input" placeholder="Nieuwe zin, bijvoorbeeld: ik ben terug op kantoor" maxlength="200" aria-label="Nieuwe zin">
+          <button type="submit" class="btn btn-primary">Toevoegen</button>
+        </form>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Flow toevoegen -->
+<dialog id="dlg-add" class="dialog dialog-wide">
+  <form method="dialog" class="dlg-inner" id="add-form">
+    <h2>Flow toevoegen vanuit Homey</h2>
+    <div class="row search-row">
+      <input type="search" id="add-query" placeholder="Zoekterm in de flownaam (leeg = alles)" aria-label="Zoekterm">
+      <button type="button" class="btn" id="add-search">Zoeken</button>
+    </div>
+    <p class="muted small" id="add-note"></p>
+    <ul class="pick-list" id="add-results"></ul>
+    <div class="dlg-foot">
+      <button type="button" class="btn btn-ghost" id="add-select-all" hidden>Alles selecteren</button>
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="add-cancel">Annuleren</button>
+      <button type="button" class="btn btn-primary" id="add-confirm" disabled>Toevoegen</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Intents leren -->
+<dialog id="dlg-learn" class="dialog">
+  <div class="dlg-inner">
+    <h2>Intents leren</h2>
+    <div id="learn-confirm">
+      <p>De skill leert alle zinnen opnieuw aan de spraakherkenning. Dat duurt enkele seconden tot een minuut.
+         Zolang het leren bezig is, kan het herkennen van opdrachten haperen.</p>
+      <div class="dlg-foot">
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="learn-cancel">Annuleren</button>
+        <button type="button" class="btn btn-primary" id="learn-go">Intents leren</button>
+      </div>
+    </div>
+    <div id="learn-progress" hidden>
+      <div class="progress-line"><span class="spinner" id="learn-spinner"></span><strong id="learn-title">Bezig…</strong></div>
+      <ol class="steps" id="learn-steps"></ol>
+      <p class="notice notice-error" id="learn-error" hidden></p>
+      <div class="dlg-foot">
+        <span class="spacer"></span>
+        <button type="button" class="btn" id="learn-close" hidden>Sluiten</button>
+        <button type="button" class="btn btn-primary" id="learn-test" hidden>Direct testen</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<!-- Testen -->
+<dialog id="dlg-test" class="dialog dialog-wide">
+  <div class="dlg-inner">
+    <h2>Testen</h2>
+    <p class="muted small">Typ een zin zoals je hem zou zeggen. Er wordt eerst alleen gekeken welke flow gekozen wordt; er wordt niets gestart.</p>
+    <form class="row search-row" id="test-form" autocomplete="off">
+      <input type="text" id="test-input" placeholder="bijvoorbeeld: ik ben terug op kantoor" maxlength="200" aria-label="Zin om te testen">
+      <button type="submit" class="btn btn-primary">Testen</button>
+    </form>
+    <div id="test-result" class="test-result" hidden></div>
+    <div class="dlg-foot"><span class="spacer"></span><button type="button" class="btn" id="test-close">Sluiten</button></div>
+  </div>
+</dialog>
+
+<!-- Bevestigen -->
+<dialog id="dlg-confirm" class="dialog">
+  <div class="dlg-inner">
+    <h2 id="confirm-title">Weet je het zeker?</h2>
+    <p id="confirm-body"></p>
+    <div class="dlg-foot">
+      <span class="spacer"></span>
+      <button type="button" class="btn" id="confirm-cancel">Annuleren</button>
+      <button type="button" class="btn btn-primary" id="confirm-ok">Doorgaan</button>
+    </div>
+  </div>
+</dialog>
+{% endblock %}
+{% block scripts %}<script src="{{ url_for('static', filename='js/flows.js') }}"></script>{% endblock %}
