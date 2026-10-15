@@ -1,5 +1,3 @@
-# Voorbeeld-service. Voeg dit toe aan je bestaande OVOS-compose (of gebruik het los),
-# en pas netwerk en OVOS-config aan zodat de skill de messagebus bereikt.
 services:
   homeyflowtrigger:
     build:
@@ -7,25 +5,11 @@ services:
       args:
         TAG: ${TAG:-latest}
     container_name: homeyflowtrigger
-    restart: unless-stopped        # nodig: de skill herstart zichzelf door te stoppen
-    ports:
-      # Beperk dit liefst tot je LAN- of Tailscale-adres, bv. "100.64.0.5:8200:8200".
-      # Let op: Docker omzeilt vaak de firewall (ufw) bij gepubliceerde poorten.
-      - "${HOMEYFLOW_BIND:-0.0.0.0}:8200:8200"
+    restart: unless-stopped
+    network_mode: host
     environment:
-      HOMEYFLOW_WEB_HOST: "0.0.0.0"   # binnen de container
+      HOMEYFLOW_WEB_HOST: "${HOMEYFLOW_WEB_HOST:-0.0.0.0}"
       HOMEYFLOW_WEB_PORT: "8200"
-      # HOMEYFLOW_ALLOWED_HOSTS: "jarvis.mijnnaam.nl"  # extra hostnamen voor de webpagina
-      # HOMEYFLOW_TRAINING_MODE: "live"                # of "restart"
     volumes:
-      # config.json en flow_mappings.json blijven hier bewaard, ook na een rebuild
       - ./config:/home/ovos/.config/ovos_skill_homeyflowtrigger
-      # Zelfde OVOS-config als je andere OVOS-containers (bevat het messagebus-adres)
-      - ${OVOS_CONFIG_FOLDER:-./ovos-config}:/home/ovos/.config/mycroft
-    networks:
-      - ovos
-
-networks:
-  ovos:
-    external: true
-    name: ${OVOS_NETWORK:-ovos}   # naam van het Docker-netwerk van je OVOS-stack
+      - ${OVOS_CONFIG_FOLDER:-/home/ovos/ovos/config}:/home/ovos/.config/mycroft
