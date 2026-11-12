@@ -6,7 +6,8 @@
   "web": {
     "host": "0.0.0.0",
     "port": 8200,
-    "allowed_hosts": []
+    "allowed_hosts": [],
+    "token": ""
   },
   "language": "nl-nl",
   "training": {

@@ -10,6 +10,7 @@ services:
     environment:
       HOMEYFLOW_WEB_HOST: "${HOMEYFLOW_WEB_HOST:-0.0.0.0}"
       HOMEYFLOW_WEB_PORT: "8200"
+      HOMEYFLOW_WEB_TOKEN: "${HOMEYFLOW_WEB_TOKEN:-}"
     volumes:
       - ./config:/home/ovos/.config/ovos_skill_homeyflowtrigger
       - ${OVOS_CONFIG_FOLDER:-/home/ovos/ovos/config}:/home/ovos/.config/mycroft

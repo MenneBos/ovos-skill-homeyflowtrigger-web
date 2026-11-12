@@ -44,6 +44,7 @@ class Settings:
     web_host: str = "0.0.0.0"
     web_port: int = DEFAULT_PORT
     allowed_hosts: List[str] = field(default_factory=list)
+    web_token: str = ""          # leeg = geen login
     language: str = "nl-nl"
     training_mode: str = "live"  # "live" (via messagebus) of "restart"
     training_timeout: int = 120
@@ -112,6 +113,7 @@ def load_settings(config_dir: Optional[Path] = None,
     settings.node_start_flow = _script_path(str(nodejs.get("start_flow", "") or ""), settings.node_start_flow)
     settings.web_host = str(web.get("host", "") or settings.web_host)
     settings.web_port = _as_int(web.get("port", DEFAULT_PORT), DEFAULT_PORT, "web.port")
+    settings.web_token = str(web.get("token", "") or "")
     hosts = web.get("allowed_hosts") or []
     settings.allowed_hosts = [str(h).strip().lower() for h in hosts if str(h).strip()]
     settings.language = str(data.get("language", "") or settings.language).lower()
@@ -127,6 +129,8 @@ def load_settings(config_dir: Optional[Path] = None,
         settings.web_host = env["HOMEYFLOW_WEB_HOST"]
     if env.get("HOMEYFLOW_WEB_PORT"):
         settings.web_port = _as_int(env["HOMEYFLOW_WEB_PORT"], DEFAULT_PORT, "HOMEYFLOW_WEB_PORT")
+    if env.get("HOMEYFLOW_WEB_TOKEN"):
+        settings.web_token = env["HOMEYFLOW_WEB_TOKEN"]
     if env.get("HOMEYFLOW_ALLOWED_HOSTS"):
         settings.allowed_hosts = [h.strip().lower() for h in env["HOMEYFLOW_ALLOWED_HOSTS"].split(",") if h.strip()]
     if env.get("HOMEYFLOW_LANGUAGE"):

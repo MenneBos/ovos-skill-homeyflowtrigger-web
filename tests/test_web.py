@@ -184,3 +184,50 @@ def test_messages_page_and_csrf_rules(client):
                       headers={"Origin": "http://evil.example"}).status_code in (403, 415)
     assert client.put("/api/messages", data='{"messages": {"started": "x"}}',
                       headers={"Content-Type": "text/plain"}).status_code == 415
+
+
+def _secured(settings, store, bridge, tmp_path):
+    from homeyflow.homey import HomeyClient
+    from homeyflow.web import create_app
+    settings.web_token = "geheim-web-token"
+    app = create_app(settings, bridge=bridge, homey=HomeyClient(settings), store=store, intent_dir=tmp_path / "intents")
+    app.testing = True
+    return app.test_client()
+
+
+def test_login_is_needed_when_a_token_is_set(settings, store, bridge, tmp_path, monkeypatch):
+    monkeypatch.setattr("time.sleep", lambda s: None)
+    client = _secured(settings, store, bridge, tmp_path)
+    page = client.get("/")
+    assert page.status_code == 302 and page.headers["Location"].endswith("/login")
+    assert client.get("/api/flows").status_code == 401
+    assert client.get("/healthz").status_code == 200 and client.get("/static/css/app.css").status_code == 200
+    assert b'type="password"' in client.get("/login").data and b'autocomplete="current-password"' in client.get("/login").data
+    bad = client.post("/login", data={"token": "fout"})
+    assert bad.status_code == 401 and b"Onjuist token" in bad.data and "Set-Cookie" not in bad.headers
+    assert client.get("/api/flows").status_code == 401
+
+
+def test_right_token_gives_a_year_long_cookie_and_bearer_works(settings, store, bridge, tmp_path):
+    client = _secured(settings, store, bridge, tmp_path)
+    ok = client.post("/login", data={"token": "geheim-web-token"})
+    cookie = ok.headers["Set-Cookie"]
+    assert ok.status_code == 302 and "HttpOnly" in cookie and "SameSite=Strict" in cookie and "Max-Age=31536000" in cookie
+    assert client.get("/api/flows").status_code == 200 and client.get("/").status_code == 200
+    fresh = _secured(settings, store, bridge, tmp_path)
+    assert fresh.get("/api/flows", headers={"Authorization": "Bearer geheim-web-token"}).status_code == 200
+    assert fresh.get("/api/flows", headers={"Authorization": "Bearer fout"}).status_code == 401
+
+
+def test_login_form_from_another_site_is_refused_and_no_token_means_no_login(settings, store, bridge, tmp_path, client):
+    secured = _secured(settings, store, bridge, tmp_path)
+    assert secured.post("/login", data={"token": "geheim-web-token"}, headers={"Origin": "http://evil.example"}).status_code == 403
+    assert client.get("/login").status_code == 302 and client.get("/api/flows").status_code == 200
+
+
+def test_token_comes_from_config_or_environment(tmp_path):
+    from homeyflow.config import load_settings
+    (tmp_path / "config.json").write_text('{"web": {"token": "uit-config"}}')
+    assert load_settings(tmp_path, env={}).web_token == "uit-config"
+    assert load_settings(tmp_path, env={"HOMEYFLOW_WEB_TOKEN": "uit-env"}).web_token == "uit-env"
+    assert load_settings(tmp_path / "leeg", env={}).web_token == ""

@@ -204,6 +204,13 @@ input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px 
   padding: 10px 14px; border-radius: 9px; box-shadow: var(--shadow); max-width: 360px; font-size: .9rem; }
 .toast.error { border-left-color: var(--danger); }
 
+/* inloggen */
+.login { display: grid; place-items: center; min-height: 100vh; padding: 16px; }
+.login-card { width: min(380px, 100%); padding: 28px 24px; display: flex; flex-direction: column; gap: 14px; align-items: stretch; }
+.login-card .logo-tile { align-self: center; }
+.login-card input { font: inherit; font-size: 16px; color: var(--text); background: var(--bg); border: 1px solid var(--border); border-radius: 9px; padding: 12px; width: 100%; }
+.login-card .btn { min-height: 46px; }
+
 @media (max-width: 900px) {
   .shell { grid-template-columns: 1fr; }
   .sidebar { position: static; height: auto; flex-direction: row; align-items: center; flex-wrap: wrap; }
@@ -227,3 +234,16 @@ input:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px 
 .msg-edit { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
 .msg-edit input { flex: 1 1 260px; }
 .card-head .row { flex-wrap: nowrap; }
+
+/* telefoon */
+@media (max-width: 640px) {
+  .nav { overflow-x: auto; scrollbar-width: none; }
+  .nav-item { padding: 10px 12px; white-space: nowrap; min-height: 44px; }
+  .topbar { flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
+  .content { padding-bottom: 28px; }
+  .btn { min-height: 44px; }
+  input, textarea, select { font-size: 16px; }          /* iOS zoomt anders in op het veld */
+  .toasts { left: 12px; right: 12px; bottom: 12px; }
+  .toast { max-width: none; }
+  .card { overflow-x: auto; }
+}

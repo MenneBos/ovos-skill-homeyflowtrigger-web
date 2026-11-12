@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="nl" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inloggen · HomeyFlowTrigger</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/favicon.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+</head>
+<body class="login">
+  <form class="card login-card" method="post" action="/login">
+    <div class="logo-tile"><img src="{{ url_for('static', filename='img/logo.png') }}" alt="" width="256" height="128"></div>
+    <h2>HomeyFlowTrigger</h2>
+    <input type="password" name="token" placeholder="Token" autocomplete="current-password" autofocus required>
+    <button class="btn btn-primary">Inloggen</button>
+    {% if message %}<p class="notice notice-error">{{ message }}</p>{% endif %}
+  </form>
+</body>
+</html>

@@ -1,12 +1,14 @@
 """De Flask-app: beheerpagina en JSON-API voor flow_mappings.json."""
 from __future__ import annotations
 
+import hmac
 import ipaddress
+import time
 from pathlib import Path
 from typing import Optional
 from urllib.parse import urlparse
 
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, redirect, render_template, request
 
 from .. import __version__
 from ..bridge import BridgeError, SkillBridge
@@ -22,6 +24,9 @@ from ..trainer import Trainer
 LOG = get_logger()
 
 SAFE_METHODS = ("GET", "HEAD", "OPTIONS")
+COOKIE = "homeyflow_auth"
+COOKIE_DAYS = 365
+OPEN_PATHS = ("/login", "/healthz")
 LOCAL_SUFFIXES = (".local", ".lan", ".home.arpa", ".internal", ".localdomain", ".ts.net")
 
 
@@ -62,11 +67,24 @@ def create_app(settings: Settings, bridge: Optional[SkillBridge] = None,
     app.config["JSON_AS_ASCII"] = False
     allowed_hosts = set(settings.allowed_hosts)
 
-    # -- beveiliging zonder wachtwoord ------------------------------------
+    # -- beveiliging: hostnaam, login met token (als ingesteld) en CSRF --------
+    token = settings.web_token
+
+    def token_ok(given) -> bool:
+        return bool(given) and hmac.compare_digest(str(given).encode(), token.encode())
+
+    def authed() -> bool:
+        bearer = request.headers.get("Authorization", "")
+        return token_ok(request.cookies.get(COOKIE)) or (bearer.startswith("Bearer ") and token_ok(bearer[7:]))
+
     @app.before_request
     def guard():
         if not _host_allowed(request.host, allowed_hosts):
             return jsonify(error="Onbekende hostnaam. Voeg hem toe aan web.allowed_hosts in config.json."), 403
+        if token and request.path not in OPEN_PATHS and not request.path.startswith("/static/") and not authed():
+            if request.path.startswith("/api/"):
+                return jsonify(error="Inloggen vereist."), 401
+            return redirect("/login")
         if request.method in SAFE_METHODS:
             return None
         origin = request.headers.get("Origin")
@@ -74,9 +92,28 @@ def create_app(settings: Settings, bridge: Optional[SkillBridge] = None,
             return jsonify(error="Verzoek van een andere website geweigerd."), 403
         if request.headers.get("Sec-Fetch-Site") not in (None, "same-origin", "none"):
             return jsonify(error="Verzoek van een andere website geweigerd."), 403
+        if request.path == "/login":
+            return None                      # het inlogformulier is geen JSON
         if not (request.content_type or "").startswith("application/json"):
             return jsonify(error="Content-Type moet application/json zijn."), 415
         return None
+
+    @app.get("/login")
+    def login_page():
+        if not token or authed():
+            return redirect("/")
+        return render_template("login.html", message="")
+
+    @app.post("/login")
+    def login():
+        if not token:
+            return redirect("/")
+        if not token_ok(request.form.get("token")):
+            time.sleep(1)                    # remt het raden
+            return render_template("login.html", message="Onjuist token"), 401
+        response = redirect("/")
+        response.set_cookie(COOKIE, token, httponly=True, samesite="Strict", max_age=COOKIE_DAYS * 86400)
+        return response
 
     @app.after_request
     def headers(response):

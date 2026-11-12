@@ -14,7 +14,7 @@ gestart.
 ## Functies
 
 - **Spraak → flow:** per flow een `.intent`-bestand voor Padatious; de skill kiest de beste zin en start de flow.
-- **Webpagina op poort 8200** (geen wachtwoord, zie [Beveiliging](#beveiliging)):
+- **Webpagina op poort 8200** (optioneel met inlogtoken, zie [Beveiliging](#beveiliging)):
   - *Dashboard* met logo, aantallen, status van Homey en van het leren.
   - *Flows*: links alle flows uit `flow_mappings.json`, rechts de zinnen van de gekozen flow
     (toevoegen, wijzigen, verwijderen; wijzigingen worden direct opgeslagen).
@@ -89,7 +89,7 @@ bestand om alles terug te zetten naar de standaardteksten.
    ```json
    {
      "homey": { "address": "http://192.168.1.50", "token": "<API-key>" },
-     "web": { "host": "0.0.0.0", "port": 8200, "allowed_hosts": [] },
+     "web": { "host": "0.0.0.0", "port": 8200, "allowed_hosts": [], "token": "" },
      "language": "nl-nl",
      "training": { "mode": "live", "timeout": 120 }
    }
@@ -137,8 +137,13 @@ Zet `config.json` in `~/.config/ovos_skill_homeyflowtrigger/` en herstart `ovos.
 
 ## Beveiliging
 
-De pagina heeft **geen wachtwoord**; wie het lokale netwerk of je tailnet op komt, kan de zinnen aanpassen
-en flows starten. Daarom:
+Zonder token heeft de pagina **geen wachtwoord**; wie het lokale netwerk of je tailnet op komt, kan de zinnen
+aanpassen en flows starten. Zet daarom een **inlogtoken**: `web.token` in `config.json` of
+`HOMEYFLOW_WEB_TOKEN` (laat het leeg voor geen login). De pagina toont dan een inlogscherm (werkt op de
+telefoon; een wachtwoordmanager of de browser kan het token onthouden). Na inloggen blijft de browser
+een jaar ingelogd (cookie `HttpOnly`, `SameSite=Strict`); scripts kunnen `Authorization: Bearer <token>` gebruiken.
+Een fout token vertraagt het antwoord met een seconde. `/healthz` en de statische bestanden blijven open.
+Verder:
 
 - Forward de poort **niet** op je router. Docker omzeilt vaak `ufw`; publiceer de poort liever op een
   specifiek adres (`HOMEYFLOW_BIND=100.x.y.z`).
